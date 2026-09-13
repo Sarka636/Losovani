@@ -125,31 +125,31 @@ export default function ClassSelector({
             </div>
           )}
 
+          {onReloadFromGitHub && (
+            <button
+              id="btn-quick-sync-public-csv"
+              type="button"
+              onClick={onReloadFromGitHub}
+              className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-sm font-semibold border border-emerald-200/80 transition-colors shadow-2xs cursor-pointer"
+              title="Načíst všechny třídy z CSV souborů v adresáři public"
+            >
+              <RefreshCw className="w-4 h-4 text-emerald-700" />
+              <span className="hidden sm:inline">Načíst z public</span>
+              <span className="sm:hidden">CSV</span>
+            </button>
+          )}
+
           <button
             id="open-import-modal-btn"
             type="button"
             onClick={onOpenImport}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-sm font-semibold border border-emerald-200/80 transition-colors shadow-2xs cursor-pointer"
-            title="Nahrát seznam studentů ze souboru CSV nebo Excel (XLSX)"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-zinc-100 text-zinc-800 rounded-xl text-sm font-semibold border border-zinc-200/90 transition-colors shadow-2xs cursor-pointer"
+            title="Nahrát seznam studentů ze souboru CSV nebo vložením textu"
           >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
-            <span className="hidden sm:inline">Nahrát ze souboru</span>
-            <span className="sm:hidden">Import</span>
+            <FileSpreadsheet className="w-4 h-4 text-zinc-600" />
+            <span className="hidden sm:inline">Nahrát CSV</span>
+            <span className="sm:hidden">Nahrát</span>
           </button>
-
-          {onOpenExport && (
-            <button
-              id="open-export-modal-btn"
-              type="button"
-              onClick={onOpenExport}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-zinc-100 text-zinc-800 rounded-xl text-sm font-semibold border border-zinc-200/90 transition-colors shadow-2xs cursor-pointer"
-              title="Exportovat všechny třídy do jednoho souboru tridy.xlsx (každá třída na samostatném listu) pro GitHub Pages"
-            >
-              <Download className="w-4 h-4 text-zinc-600" />
-              <span className="hidden md:inline">Export pro GitHub</span>
-              <span className="md:hidden">Export</span>
-            </button>
-          )}
         </div>
       </div>
 
@@ -355,7 +355,7 @@ export default function ClassSelector({
                             onReloadFromGitHub();
                           }}
                           className="flex-1 py-1.5 px-2 text-zinc-600 hover:text-emerald-800 hover:bg-zinc-100 rounded-lg flex items-center justify-center gap-1.5 font-medium transition-colors cursor-pointer"
-                          title="Znovu načte třídy ze souborů CSV v adresáři public (nebo z tridy.xlsx)"
+                          title="Znovu načte všechny třídy ze souborů CSV v adresáři public"
                         >
                           <RefreshCw className="w-3.5 h-3.5 text-zinc-500" />
                           <span>Načíst z public CSV</span>

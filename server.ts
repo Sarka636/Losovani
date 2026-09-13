@@ -77,6 +77,17 @@ function syncClassesFromPublicCsvs(): { loadedClasses: string[]; totalStudents: 
     console.warn("Could not write csv-manifest.json:", e);
   }
 
+  // Remove any classes in the database that no longer have a corresponding .csv file in public/
+  const validClassNamesLower = files.map((f) => path.basename(f, path.extname(f)).trim().toLowerCase());
+  const existingDbClasses = db.prepare("SELECT id, name FROM classes").all() as Array<{ id: number; name: string }>;
+  for (const dbCls of existingDbClasses) {
+    if (!validClassNamesLower.includes(dbCls.name.trim().toLowerCase())) {
+      db.prepare("DELETE FROM students WHERE class_id = ?").run(dbCls.id);
+      db.prepare("DELETE FROM classes WHERE id = ?").run(dbCls.id);
+      console.log(`[Startup CSV Sync] Removed obsolete class not in public/*.csv: ${dbCls.name}`);
+    }
+  }
+
   const insertClass = db.prepare("INSERT INTO classes (name) VALUES (?)");
   const insertStudent = db.prepare("INSERT INTO students (name, class_id, is_active) VALUES (?, ?, 1)");
 
@@ -109,20 +120,16 @@ function syncClassesFromPublicCsvs(): { loadedClasses: string[]; totalStudents: 
       totalStudents += studentNames.length;
     } else {
       classId = existing.id;
-      // If class exists but has 0 students, populate them
-      const countRes = db.prepare("SELECT COUNT(*) as count FROM students WHERE class_id = ?").get(classId) as {
-        count: number;
-      };
-      if (countRes.count === 0) {
-        const insertMany = db.transaction((names: string[]) => {
-          for (const name of names) {
-            insertStudent.run(name, classId);
-          }
-        });
-        insertMany(studentNames);
-        loadedClasses.push(className);
-        totalStudents += studentNames.length;
-      }
+      // Refresh students for this class from the CSV file
+      db.prepare("DELETE FROM students WHERE class_id = ?").run(classId);
+      const insertMany = db.transaction((names: string[]) => {
+        for (const name of names) {
+          insertStudent.run(name, classId);
+        }
+      });
+      insertMany(studentNames);
+      loadedClasses.push(className);
+      totalStudents += studentNames.length;
     }
   }
 
@@ -150,19 +157,6 @@ db.exec(`
 const studentCols = db.prepare("PRAGMA table_info(students)").all() as Array<{ name: string }>;
 if (!studentCols.some((col) => col.name === "class_id")) {
   db.exec("ALTER TABLE students ADD COLUMN class_id INTEGER;");
-}
-
-// Migration: ensure at least one default class exists if none
-const classCountResult = db.prepare("SELECT COUNT(*) as count FROM classes").get() as { count: number };
-if (classCountResult.count === 0) {
-  const info = db.prepare("INSERT INTO classes (name) VALUES (?)").run("1.A");
-  const defaultClassId = info.lastInsertRowid;
-  db.prepare("UPDATE students SET class_id = ? WHERE class_id IS NULL OR class_id = 0").run(defaultClassId);
-} else {
-  const firstClass = db.prepare("SELECT id FROM classes ORDER BY id ASC LIMIT 1").get() as { id: number } | undefined;
-  if (firstClass) {
-    db.prepare("UPDATE students SET class_id = ? WHERE class_id IS NULL OR class_id = 0").run(firstClass.id);
-  }
 }
 
 // Auto-sync classes from public/*.csv at startup

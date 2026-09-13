@@ -306,25 +306,26 @@ export default function App() {
 
           <div className="flex items-center gap-2">
             <button
-              id="btn-header-export-github"
+              id="btn-header-sync-public-csv"
               type="button"
-              onClick={handleExportXlsxForGitHub}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:text-emerald-900 bg-white hover:bg-zinc-100 border border-zinc-200/90 rounded-xl transition-colors cursor-pointer shadow-2xs"
-              title="Exportovat všechny třídy do souboru tridy.xlsx pro GitHub Pages"
+              onClick={handleReloadFromGitHub}
+              disabled={isReloadingGitHub}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 rounded-xl transition-colors cursor-pointer shadow-2xs"
+              title="Znovu načíst všechny třídy ze souborů CSV v adresáři public"
             >
-              <Download className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="hidden sm:inline">Export pro GitHub (.xlsx)</span>
-              <span className="sm:hidden">Export</span>
+              <RefreshCw className={`w-3.5 h-3.5 text-emerald-700 ${isReloadingGitHub ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Načíst z public CSV</span>
+              <span className="sm:hidden">Načíst CSV</span>
             </button>
 
             <button
               id="btn-header-quick-import"
               type="button"
               onClick={() => setIsImportModalOpen(true)}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/60 rounded-xl transition-colors cursor-pointer shadow-2xs"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:text-zinc-900 bg-white hover:bg-zinc-100 border border-zinc-200/90 rounded-xl transition-colors cursor-pointer shadow-2xs"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-700" />
-              <span>Nahrát třídu</span>
+              <FileSpreadsheet className="w-3.5 h-3.5 text-zinc-600" />
+              <span>Nahrát CSV</span>
             </button>
           </div>
         </div>

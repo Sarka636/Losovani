@@ -203,10 +203,10 @@ export default function ImportModal({
             </div>
             <div>
               <h3 id="import-modal-title" className="text-xl font-bold text-zinc-900">
-                Nahrát seznam třídy
+                Nahrát seznam třídy (CSV)
               </h3>
               <p className="text-xs text-zinc-500 font-medium">
-                Podporuje Excel (.xlsx, .xls) a tabulky (.csv, .tsv)
+                Třídy se primárně čtou automaticky ze souborů .csv v adresáři public/
               </p>
             </div>
           </div>
@@ -336,7 +336,7 @@ export default function ImportModal({
                       </span>
                     </p>
                     <p className="text-xs text-zinc-400">
-                      Podporuje vícelistový Excel (všechny třídy v jednom .xlsx), Bakaláře i CSV
+                      Podporuje soubory .csv (jedno jméno na řádek), Bakaláře i textové seznamy
                     </p>
                   </div>
                   {fileName && (

@@ -222,44 +222,10 @@ export function downloadBlob(blob: Blob, fileName: string): void {
 }
 
 /**
- * Attempts to fetch a default tridy.xlsx file from the repository/public root.
- * Returns the parsed sheets or null if not found.
+ * Legacy placeholder - tridy.xlsx loading has been cancelled per user request.
+ * CSV files in public/ are the single source of truth.
  */
 export async function fetchDefaultClassesFromRepo(): Promise<SheetClassResult[] | null> {
-  const base = import.meta.env.BASE_URL || './';
-  const cleanBase = base.endsWith('/') ? base : base + '/';
-
-  const possiblePaths = [
-    `${cleanBase}tridy.xlsx`,
-    './tridy.xlsx',
-    'tridy.xlsx',
-    '/tridy.xlsx',
-    `${cleanBase}public/tridy.xlsx`,
-    './public/tridy.xlsx',
-  ];
-
-  for (const p of possiblePaths) {
-    try {
-      const res = await fetch(p, { method: 'GET', cache: 'no-cache' });
-      if (res.ok) {
-        const contentType = res.headers.get('content-type');
-        // ensure it didn't return an index.html fallback
-        if (contentType && contentType.includes('text/html')) {
-          continue;
-        }
-        const buffer = await res.arrayBuffer();
-        if (buffer && buffer.byteLength > 100) {
-          const parsed = parseAllSheetsWorkbook(buffer);
-          if (parsed && parsed.length > 0) {
-            return parsed;
-          }
-        }
-      }
-    } catch {
-      // Continue to next path candidate
-    }
-  }
-
   return null;
 }
 
@@ -298,7 +264,6 @@ export function parseCsvContentToStudentNames(csvContent: string | ArrayBuffer):
 
 /**
  * Searches and fetches all CSV files located in public/.
- * Uses csv-manifest.json or probes candidate filenames.
  * The class name is the file name without .csv.
  */
 export async function fetchPublicCsvClasses(): Promise<SheetClassResult[]> {
@@ -307,6 +272,30 @@ export async function fetchPublicCsvClasses(): Promise<SheetClassResult[]> {
 
   const results: SheetClassResult[] = [];
   const processedFiles = new Set<string>();
+
+  // 0. Try backend API first if available
+  try {
+    const apiRes = await fetch('/api/public-csvs', { method: 'GET' });
+    if (apiRes.ok) {
+      const apiData = await apiRes.json();
+      if (apiData && Array.isArray(apiData.files) && apiData.files.length > 0) {
+        for (const f of apiData.files) {
+          if (f.className && Array.isArray(f.names) && f.names.length > 0) {
+            results.push({
+              className: f.className,
+              names: f.names,
+            });
+            processedFiles.add(String(f.filename || f.className).toLowerCase());
+          }
+        }
+        if (results.length > 0) {
+          return results;
+        }
+      }
+    }
+  } catch {
+    // Continue with static manifest / file fetches
+  }
 
   // 1. Try to fetch csv-manifest.json
   const manifestPaths = [
@@ -342,22 +331,13 @@ export async function fetchPublicCsvClasses(): Promise<SheetClassResult[]> {
     }
   }
 
-  // 2. Fallback candidate standard filenames
+  // 2. Fallback candidate filenames if manifest is not present
   if (filenamesToFetch.length === 0) {
     filenamesToFetch = [
-      '1.A.csv',
-      '2.B.csv',
-      'Kvarta.csv',
-      '1A.csv',
-      '1B.csv',
-      '2A.csv',
-      '2B.csv',
-      '3A.csv',
-      '3B.csv',
-      '4A.csv',
-      'Prima.csv',
-      'Sekunda.csv',
-      'Tercie.csv',
+      'trida1E.csv',
+      'trida1.E.csv',
+      '1.E.csv',
+      '1E.csv',
       'trida.csv',
     ];
   }

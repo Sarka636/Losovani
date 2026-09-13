@@ -162,8 +162,16 @@ export async function syncPublicCsvClasses(force = false): Promise<ClassItem[]> 
     const csvClasses = await fetchPublicCsvClasses();
     if (csvClasses && csvClasses.length > 0) {
       const deletedNames = force ? [] : getDeletedClassNames().map((n) => n.toLowerCase());
-      const currentClasses = getLocalStoredClasses();
-      const currentStudents = getLocalStoredStudents();
+      let currentClasses = getLocalStoredClasses();
+      let currentStudents = getLocalStoredStudents();
+
+      // Prune old classes that are not present in public CSV files (e.g. removed 1.A, 2.B, Kvarta)
+      const validClassNamesLower = csvClasses.map((c) => c.className.toLowerCase());
+      const filteredClasses = currentClasses.filter((c) => validClassNamesLower.includes(c.name.toLowerCase()));
+      if (filteredClasses.length !== currentClasses.length) {
+        currentClasses = filteredClasses;
+        currentStudents = currentStudents.filter((s) => currentClasses.some((c) => c.id === s.class_id));
+      }
 
       let nextClassId = Date.now();
       let nextStudentId = Date.now() + 1000;
@@ -193,9 +201,11 @@ export async function syncPublicCsvClasses(force = false): Promise<ClassItem[]> 
           }
           hasChanges = true;
         } else {
-          // If class exists but has 0 students in storage, populate from CSV
+          // If class exists, ensure its students match the CSV file
           const classStudents = currentStudents.filter((s) => s.class_id === existing.id);
-          if (classStudents.length === 0) {
+          if (classStudents.length === 0 || force) {
+            // Replace students with latest from CSV
+            currentStudents = currentStudents.filter((s) => s.class_id !== existing.id);
             for (const sName of csvClass.names) {
               currentStudents.push({
                 id: nextStudentId++,
@@ -209,10 +219,8 @@ export async function syncPublicCsvClasses(force = false): Promise<ClassItem[]> 
         }
       }
 
-      if (hasChanges) {
-        setLocalStoredClasses(currentClasses);
-        setLocalStoredStudents(currentStudents);
-      }
+      setLocalStoredClasses(currentClasses);
+      setLocalStoredStudents(currentStudents);
     }
   } catch (err) {
     console.warn('Client CSV sync warning:', err);
@@ -224,13 +232,13 @@ export async function syncPublicCsvClasses(force = false): Promise<ClassItem[]> 
 }
 
 /**
- * Initializes data from public CSV files (or public/tridy.xlsx) if localStorage is empty
+ * Initializes data from public CSV files if localStorage is empty
  */
 export async function initializeStorageIfEmpty(): Promise<boolean> {
   const isInitialized = localStorage.getItem(STORAGE_INIT_KEY);
   const existingClasses = getLocalStoredClasses();
 
-  // If user already has classes or initialized, still sync any newly added public CSV files
+  // If user already has classes or initialized, still sync with current public CSV files
   if (isInitialized || existingClasses.length > 0) {
     await syncPublicCsvClasses(false);
     return false;
@@ -239,7 +247,7 @@ export async function initializeStorageIfEmpty(): Promise<boolean> {
   // Mark that initial attempt was performed
   localStorage.setItem(STORAGE_INIT_KEY, 'true');
 
-  // 1. Primary: Load all CSV files from public/ (filename = class name)
+  // Load all CSV files found in public/ (filename = class name)
   try {
     const csvClasses = await fetchPublicCsvClasses();
     if (csvClasses && csvClasses.length > 0) {
@@ -250,40 +258,8 @@ export async function initializeStorageIfEmpty(): Promise<boolean> {
     console.warn('Could not auto-load CSV classes from public:', err);
   }
 
-  // 2. Secondary: Fallback to tridy.xlsx if no CSV files
-  try {
-    const fromRepo = await fetchDefaultClassesFromRepo();
-    if (fromRepo && fromRepo.length > 0) {
-      await loadFromParsedSheets(fromRepo);
-      return true;
-    }
-  } catch (err) {
-    console.warn('Could not load default classes from tridy.xlsx:', err);
-  }
-
-  // 3. Fallback initial sample class if nothing else found
-  const sampleClass: StoredClass = {
-    id: 1,
-    name: '1.A',
-    created_at: new Date().toISOString(),
-  };
-  const sampleStudents: StoredStudent[] = [
-    'Tereza Černá',
-    'Adam Dvořák',
-    'Filip Horák',
-    'Eliška Kučerová',
-    'Jan Pospíšil',
-    'David Svoboda',
-  ].map((name, idx) => ({
-    id: idx + 1,
-    class_id: 1,
-    name,
-    is_active: 1,
-  }));
-
-  setLocalStoredClasses([sampleClass]);
-  setLocalStoredStudents(sampleStudents);
-  return true;
+  // Never create dummy sample classes if no CSVs exist
+  return false;
 }
 
 /**
@@ -322,16 +298,15 @@ export async function loadFromParsedSheets(
 }
 
 /**
- * Re-syncs / reloads classes from public CSV files or public/tridy.xlsx
+ * Re-syncs / reloads classes strictly from public CSV files
  */
 export async function reloadFromGitHubXlsx(): Promise<{ count: number; classNames: string[] }> {
   clearDeletedClassNames();
 
-  // 1. Try public CSV files first
   try {
     const csvClasses = await fetchPublicCsvClasses();
     if (csvClasses && csvClasses.length > 0) {
-      const updatedClasses = await syncPublicCsvClasses(true);
+      await syncPublicCsvClasses(true);
       return {
         count: csvClasses.length,
         classNames: csvClasses.map((s) => s.className),
@@ -341,17 +316,7 @@ export async function reloadFromGitHubXlsx(): Promise<{ count: number; className
     console.warn('Could not reload from public CSVs:', err);
   }
 
-  // 2. Fallback to tridy.xlsx
-  const fromRepo = await fetchDefaultClassesFromRepo();
-  if (fromRepo && fromRepo.length > 0) {
-    await loadFromParsedSheets(fromRepo);
-    return {
-      count: fromRepo.length,
-      classNames: fromRepo.map((s) => s.className),
-    };
-  }
-
-  throw new Error('V adresáři public nebyly nalezeny žádné CSV soubory ani soubor tridy.xlsx.');
+  throw new Error('V adresáři public nebyly nalezeny žádné CSV soubory.');
 }
 
 /**

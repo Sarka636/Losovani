@@ -53,11 +53,4 @@ for (const file of csvFiles) {
   fs.copyFileSync(path.join(publicDir, file), path.join(docsDir, file));
 }
 
-// Verify public/tridy.xlsx is in docs/
-const publicXlsx = path.resolve('public/tridy.xlsx');
-const docsXlsx = path.join(docsDir, 'tridy.xlsx');
-if (fs.existsSync(publicXlsx) && !fs.existsSync(docsXlsx)) {
-  fs.copyFileSync(publicXlsx, docsXlsx);
-}
-
 console.log(`✅ Successfully populated /docs with ${csvFiles.length} CSV classes for GitHub Pages`);
