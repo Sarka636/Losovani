@@ -90,28 +90,30 @@ export default function ExportGitHubModal({
 
             {/* Step by step guide */}
             <div className="space-y-3 pt-1">
-              <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200/80 text-amber-900 text-xs space-y-1">
-                <span className="font-bold flex items-center gap-1.5 text-amber-950">
-                  <Github className="w-4 h-4 text-amber-700" />
-                  Důležité: Nastavení GitHub Pages (proti prázdné stránce)
+              <div className="p-3 bg-emerald-50/90 rounded-xl border border-emerald-200/80 text-emerald-950 text-xs space-y-1.5">
+                <span className="font-bold flex items-center gap-1.5 text-emerald-950">
+                  <Github className="w-4 h-4 text-emerald-700" />
+                  Nastavení GitHub Pages (Deploy from a branch &rarr; /docs)
                 </span>
-                <p className="leading-relaxed">
-                  Ve svém GitHub repozitáři otevřete <strong>Settings ⚙️ &rarr; Pages</strong> a v sekci <strong>Build and deployment &rarr; Source</strong> přepněte na:
+                <p className="leading-relaxed text-zinc-700">
+                  Ve svém GitHub repozitáři přejděte do <strong>Settings ⚙️ &rarr; Pages</strong>. V sekci <strong>Build and deployment</strong>:
                 </p>
-                <div className="bg-white/90 font-mono font-semibold px-2 py-1 rounded text-emerald-800 border border-amber-200 w-fit">
-                  Source: GitHub Actions
+                <div className="space-y-1 pl-2 font-mono text-[11px] text-zinc-800">
+                  <div>1. <strong>Source:</strong> Deploy from a branch</div>
+                  <div>2. <strong>Branch:</strong> <span className="bg-white px-1.5 py-0.5 rounded border border-zinc-200">main</span> (nebo master) a složka <span className="bg-white px-1.5 py-0.5 rounded border border-zinc-200 font-bold text-emerald-700">/docs</span></div>
+                  <div>3. Klikněte na <strong>Save</strong></div>
                 </div>
-                <p className="text-[11px] text-amber-800 leading-normal">
-                  (Pokud ponecháte výchozí „Deploy from a branch“, GitHub Pages nespustí kompilaci a zobrazí prázdnou stránku. S GitHub Actions se web automaticky zkompiluje a spustí za cca 1 minutu).
+                <p className="text-[11px] text-emerald-800 leading-normal pt-0.5">
+                  Složka <code className="bg-white/80 px-1 py-0.2 rounded font-mono font-bold">/docs</code> je v projektu zkompilována a připravena včetně všech souborů, takže aplikace naběhne bez prázdné stránky.
                 </p>
               </div>
 
               <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5 pt-1">
-                Jak nahrát třídy do repozitáře:
+                Jak aktualizovat třídy v repozitáři:
               </h3>
               <ol className="text-xs space-y-2 text-zinc-600 list-decimal list-inside pl-1 leading-relaxed">
                 <li>
-                  Ve svém repozitáři na GitHubu otevřete složku <code className="bg-zinc-100 text-zinc-800 px-1 py-0.5 rounded font-mono">public/</code>.
+                  Ve svém repozitáři na GitHubu otevřete složku <code className="bg-zinc-100 text-zinc-800 px-1 py-0.5 rounded font-mono">public/</code> (nebo přímo <code className="bg-zinc-100 text-zinc-800 px-1 py-0.5 rounded font-mono">docs/</code>).
                 </li>
                 <li>
                   Klikněte na <strong>Add file &rarr; Upload files</strong> a nahrajte stažený soubor <code className="bg-zinc-100 text-zinc-800 px-1 py-0.5 rounded font-mono">tridy.xlsx</code>.
@@ -121,7 +123,7 @@ export default function ExportGitHubModal({
                 </li>
               </ol>
               <p className="text-[11px] text-zinc-500 bg-zinc-50 p-2.5 rounded-xl border border-zinc-200/60">
-                Při otevření aplikace na GitHub Pages (na libovolném počítači, tabletu i mobilu) si aplikace soubor <code className="font-mono">tridy.xlsx</code> automaticky načte.
+                Při otevření aplikace na GitHub Pages si aplikace soubor <code className="font-mono">tridy.xlsx</code> automaticky načte.
               </p>
             </div>
 

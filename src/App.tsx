@@ -456,12 +456,12 @@ export default function App() {
                     <strong>Vyškrtávání studentů:</strong> Kliknutím na studenta v seznamu ho můžete dočasně vyškrtnout (nepřítomen, už zkoušený). Po vylosování lze studenta (nebo celou dvojici) vyškrtnout jedním kliknutím přímo pod výsledkem.
                   </span>
                 </li>
-                <li className="flex items-start gap-2 bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/60 text-amber-900">
-                  <span className="w-5 h-5 rounded-full bg-amber-200 text-amber-900 font-bold flex items-center justify-center shrink-0 text-[11px]">
+                <li className="flex items-start gap-2 bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200/60 text-emerald-950">
+                  <span className="w-5 h-5 rounded-full bg-emerald-200 text-emerald-950 font-bold flex items-center justify-center shrink-0 text-[11px]">
                     5
                   </span>
                   <span>
-                    <strong>Proč se po exportu na GitHub může zobrazit prázdná stránka?</strong> Na GitHubu v <strong>Settings ⚙️ &rarr; Pages</strong> v sekci <em>Build and deployment</em> přepněte <strong>Source</strong> na <strong>GitHub Actions</strong> (místo „Deploy from a branch“). Repozitář má připravený skript <code>deploy.yml</code>, který aplikaci automaticky zkompiluje a zprovozní.
+                    <strong>Nastavení GitHub Pages (Deploy from a branch &rarr; /docs):</strong> Na GitHubu v <strong>Settings ⚙️ &rarr; Pages</strong> v sekci <em>Build and deployment</em> ponechte <strong>Deploy from a branch</strong>, jako větev vyberte <strong>main</strong> (nebo master) a jako složku zvolte <strong>/docs</strong>. Složka <code>docs/</code> je v repozitáři kompletně zkompilována a připravena pro okamžité spuštění.
                   </span>
                 </li>
               </ul>
