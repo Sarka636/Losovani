@@ -263,17 +263,67 @@ export function parseCsvContentToStudentNames(csvContent: string | ArrayBuffer):
 }
 
 /**
+ * Probes GitHub API when running on GitHub Pages (username.github.io/repo)
+ * to automatically discover all .csv files in the repo's public/ or docs/ folders.
+ */
+async function discoverGitHubPagesCsvs(): Promise<Array<{ filename: string; className: string; url: string }>> {
+  if (typeof window === 'undefined') return [];
+  const host = window.location.hostname;
+  const pathParts = window.location.pathname.split('/').filter(Boolean);
+  if (!host.endsWith('.github.io') || pathParts.length === 0) {
+    return [];
+  }
+
+  const owner = host.replace(/\.github\.io$/i, '');
+  const repo = pathParts[0];
+  const results: Array<{ filename: string; className: string; url: string }> = [];
+  const seenFiles = new Set<string>();
+
+  // Check both /public and /docs in the repo via GitHub REST API
+  for (const folder of ['public', 'docs']) {
+    try {
+      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${folder}`;
+      const res = await fetch(apiUrl, {
+        headers: { Accept: 'application/vnd.github.v3+json' },
+        cache: 'no-cache',
+      });
+      if (res.ok) {
+        const items = await res.json();
+        if (Array.isArray(items)) {
+          for (const item of items) {
+            if (item.name && item.name.toLowerCase().endsWith('.csv') && (item.type === 'file' || item.download_url)) {
+              const lower = item.name.toLowerCase();
+              if (!seenFiles.has(lower)) {
+                seenFiles.add(lower);
+                results.push({
+                  filename: item.name,
+                  className: item.name.replace(/\.csv$/i, ''),
+                  url: item.download_url || `https://raw.githubusercontent.com/${owner}/${repo}/main/${folder}/${item.name}`,
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn(`GitHub API discover for ${folder} warning:`, e);
+    }
+  }
+
+  return results;
+}
+
+/**
  * Searches and fetches all CSV files located in public/.
  * The class name is the file name without .csv.
  */
 export async function fetchPublicCsvClasses(): Promise<SheetClassResult[]> {
   const base = import.meta.env.BASE_URL || './';
   const cleanBase = base.endsWith('/') ? base : base + '/';
-
   const results: SheetClassResult[] = [];
   const processedFiles = new Set<string>();
 
-  // 0. Try backend API first if available
+  // 0. Try backend API first if available (local development with server.ts)
   try {
     const apiRes = await fetch('/api/public-csvs', { method: 'GET' });
     if (apiRes.ok) {
@@ -297,7 +347,38 @@ export async function fetchPublicCsvClasses(): Promise<SheetClassResult[]> {
     // Continue with static manifest / file fetches
   }
 
-  // 1. Try to fetch csv-manifest.json
+  // 1. On GitHub Pages, dynamically discover all CSVs in repo's public/ and docs/ via GitHub API
+  try {
+    const ghFiles = await discoverGitHubPagesCsvs();
+    for (const gf of ghFiles) {
+      if (processedFiles.has(gf.filename.toLowerCase())) continue;
+      try {
+        const ghRes = await fetch(`${gf.url}?t=${Date.now()}`, { cache: 'no-cache' });
+        if (ghRes.ok) {
+          const text = await ghRes.text();
+          if (text && text.trim().length > 0) {
+            const names = parseCsvContentToStudentNames(text);
+            if (names.length > 0) {
+              results.push({
+                className: gf.className,
+                names,
+              });
+              processedFiles.add(gf.filename.toLowerCase());
+            }
+          }
+        }
+      } catch (err) {
+        console.warn(`Could not fetch discovered GitHub file ${gf.filename}:`, err);
+      }
+    }
+    if (results.length > 0) {
+      return results;
+    }
+  } catch (err) {
+    console.warn('GitHub Pages discovery error:', err);
+  }
+
+  // 2. Try to fetch csv-manifest.json
   const manifestPaths = [
     `${cleanBase}csv-manifest.json`,
     './csv-manifest.json',
@@ -311,7 +392,7 @@ export async function fetchPublicCsvClasses(): Promise<SheetClassResult[]> {
 
   for (const mp of manifestPaths) {
     try {
-      const res = await fetch(mp, { method: 'GET', cache: 'no-cache' });
+      const res = await fetch(`${mp}?t=${Date.now()}`, { method: 'GET', cache: 'no-cache' });
       if (res.ok) {
         const ct = res.headers.get('content-type');
         if (ct && ct.includes('text/html')) continue;
@@ -331,18 +412,45 @@ export async function fetchPublicCsvClasses(): Promise<SheetClassResult[]> {
     }
   }
 
-  // 2. Fallback candidate filenames if manifest is not present
-  if (filenamesToFetch.length === 0) {
-    filenamesToFetch = [
-      'trida1E.csv',
-      'trida1.E.csv',
-      '1.E.csv',
-      '1E.csv',
-      'trida.csv',
-    ];
+  // 3. Fallback candidate filenames if manifest is not present or empty
+  const fallbackCandidates = [
+    '1E.csv',
+    '3A_a.csv',
+    '3A_b.csv',
+    '3A_1.csv',
+    '3A_2.csv',
+    '1.E.csv',
+    '3.A.csv',
+    'trida1E.csv',
+    'trida.csv',
+    '1A.csv',
+    '1B.csv',
+    '2A.csv',
+    '2B.csv',
+    '3A.csv',
+    '3B.csv',
+    '4A.csv',
+    '4B.csv',
+  ];
+
+  for (const fc of fallbackCandidates) {
+    if (!filenamesToFetch.includes(fc)) {
+      filenamesToFetch.push(fc);
+    }
   }
 
-  // 3. Fetch and parse each CSV
+  // Detect GitHub owner / repo for direct raw.githubusercontent.com candidate paths
+  let ghOwner = '';
+  let ghRepo = '';
+  if (typeof window !== 'undefined' && window.location.hostname.endsWith('.github.io')) {
+    ghOwner = window.location.hostname.replace(/\.github\.io$/i, '');
+    const pparts = window.location.pathname.split('/').filter(Boolean);
+    if (pparts.length > 0) {
+      ghRepo = pparts[0];
+    }
+  }
+
+  // 4. Fetch and parse each CSV
   for (const filename of filenamesToFetch) {
     const cleanFilename = filename.trim();
     if (processedFiles.has(cleanFilename.toLowerCase())) continue;
@@ -359,9 +467,18 @@ export async function fetchPublicCsvClasses(): Promise<SheetClassResult[]> {
       `./public/${cleanFilename}`,
     ];
 
+    if (ghOwner && ghRepo) {
+      possiblePaths.push(
+        `https://raw.githubusercontent.com/${ghOwner}/${ghRepo}/main/public/${cleanFilename}`,
+        `https://raw.githubusercontent.com/${ghOwner}/${ghRepo}/main/docs/${cleanFilename}`,
+        `https://raw.githubusercontent.com/${ghOwner}/${ghRepo}/master/public/${cleanFilename}`,
+        `https://raw.githubusercontent.com/${ghOwner}/${ghRepo}/master/docs/${cleanFilename}`
+      );
+    }
+
     for (const p of possiblePaths) {
       try {
-        const res = await fetch(p, { method: 'GET', cache: 'no-cache' });
+        const res = await fetch(`${p}?t=${Date.now()}`, { method: 'GET', cache: 'no-cache' });
         if (res.ok) {
           const ct = res.headers.get('content-type');
           if (ct && ct.includes('text/html')) continue;

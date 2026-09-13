@@ -159,6 +159,9 @@ export async function syncPublicCsvClasses(force = false): Promise<ClassItem[]> 
 
   // Client-side static / localStorage sync
   try {
+    if (force) {
+      clearDeletedClassNames();
+    }
     const csvClasses = await fetchPublicCsvClasses();
     if (csvClasses && csvClasses.length > 0) {
       const deletedNames = force ? [] : getDeletedClassNames().map((n) => n.toLowerCase());

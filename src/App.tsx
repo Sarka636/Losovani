@@ -415,57 +415,23 @@ export default function App() {
               </div>
             )}
 
-            {/* Guide Card */}
+            {/* GitHub Pages Setting Card */}
             <div
               id="quick-guide-card"
-              className="bg-white rounded-3xl p-5 sm:p-6 border border-zinc-200/90 shadow-xs"
+              className="bg-white rounded-3xl p-5 sm:p-6 border border-zinc-200/90 shadow-xs space-y-3"
             >
-              <h3 className="text-sm font-bold text-zinc-900 mb-2 flex items-center gap-2" id="guide-title">
+              <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2" id="guide-title">
                 <HelpCircle className="w-4 h-4 text-emerald-600" />
-                Jak používat Losovátko s více třídami a na GitHub Pages?
+                Nastavení GitHub Pages (Deploy from a branch &rarr; /docs)
               </h3>
-              <ul className="text-xs text-zinc-600 space-y-2.5 leading-relaxed" id="guide-list">
-                <li className="flex items-start gap-2">
-                  <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-700 font-bold flex items-center justify-center shrink-0 text-[11px]">
-                    1
-                  </span>
-                  <span>
-                    <strong>Všechny třídy v jednom Excelu:</strong> Klikněte na <strong>Export pro GitHub (.xlsx)</strong>. Aplikace vygeneruje a stáhne soubor <code>tridy.xlsx</code>, kde je každá třída na samostatném listu (záložce).
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-700 font-bold flex items-center justify-center shrink-0 text-[11px]">
-                    2
-                  </span>
-                  <span>
-                    <strong>Automatické načtení na GitHub Pages:</strong> Stažený soubor <code>tridy.xlsx</code> nahrajte do složky <code>public/</code> ve svém GitHub repozitáři. Na libovolném počítači i mobilu se pak třídy načtou automaticky při spuštění.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-700 font-bold flex items-center justify-center shrink-0 text-[11px]">
-                    3
-                  </span>
-                  <span>
-                    <strong>Jednotlivec nebo dvojice:</strong> Přepínačem v tmavém losovacím panelu můžete volit mezi vylosováním jednoho studenta (pro zkoušení) nebo dvojice (pro týmovou práci a dialogy).
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-700 font-bold flex items-center justify-center shrink-0 text-[11px]">
-                    4
-                  </span>
-                  <span>
-                    <strong>Vyškrtávání studentů:</strong> Kliknutím na studenta v seznamu ho můžete dočasně vyškrtnout (nepřítomen, už zkoušený). Po vylosování lze studenta (nebo celou dvojici) vyškrtnout jedním kliknutím přímo pod výsledkem.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2 bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200/60 text-emerald-950">
-                  <span className="w-5 h-5 rounded-full bg-emerald-200 text-emerald-950 font-bold flex items-center justify-center shrink-0 text-[11px]">
-                    5
-                  </span>
-                  <span>
-                    <strong>Nastavení GitHub Pages (Deploy from a branch &rarr; /docs):</strong> Na GitHubu v <strong>Settings ⚙️ &rarr; Pages</strong> v sekci <em>Build and deployment</em> ponechte <strong>Deploy from a branch</strong>, jako větev vyberte <strong>main</strong> (nebo master) a jako složku zvolte <strong>/docs</strong>. Složka <code>docs/</code> je v repozitáři kompletně zkompilována a připravena pro okamžité spuštění.
-                  </span>
-                </li>
-              </ul>
+              <div className="text-xs text-zinc-600 leading-relaxed space-y-2.5 bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-200/70 text-emerald-950">
+                <p>
+                  Na GitHubu v <strong>Settings ⚙️ &rarr; Pages</strong> v sekci <em>Build and deployment</em> zvolte <strong>Deploy from a branch</strong>, jako větev vyberte <strong>main</strong> (nebo master) a jako složku <strong>/docs</strong>.
+                </p>
+                <p className="text-zinc-600 text-[11px] pt-2 border-t border-emerald-200/60">
+                  <strong>Jak nahrávat třídy z CSV souborů:</strong> Každý soubor <code>.csv</code> představuje jednu třídu (např. <code>1E.csv</code>). Aplikace na GitHub Pages automaticky prohledává repozitář (složky <code>public/</code> i <code>docs/</code>). Tlačítkem <strong>Načíst z public CSV</strong> v záhlaví nebo v rozbalovací nabídce tříd kdykoliv načtete aktuální seznam tříd.
+                </p>
+              </div>
             </div>
           </section>
         </div>

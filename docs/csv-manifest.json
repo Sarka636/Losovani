@@ -1,6 +1,14 @@
 [
   {
-    "filename": "trida1E.csv",
-    "className": "trida1E"
+    "filename": "1E.csv",
+    "className": "1E"
+  },
+  {
+    "filename": "3A_a.csv",
+    "className": "3A_a"
+  },
+  {
+    "filename": "3A_b.csv",
+    "className": "3A_b"
   }
 ]

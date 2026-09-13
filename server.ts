@@ -66,13 +66,29 @@ function syncClassesFromPublicCsvs(): { loadedClasses: string[]; totalStudents: 
   const loadedClasses: string[] = [];
   let totalStudents = 0;
 
-  // Generate / update public/csv-manifest.json
+  // Generate / update public/csv-manifest.json and docs/csv-manifest.json
   const manifest = files.map((file) => ({
     filename: file,
     className: path.basename(file, path.extname(file)),
   }));
   try {
     fs.writeFileSync(path.join(publicDir, "csv-manifest.json"), JSON.stringify(manifest, null, 2));
+    const docsDir = path.join(process.cwd(), "docs");
+    if (fs.existsSync(docsDir)) {
+      fs.writeFileSync(path.join(docsDir, "csv-manifest.json"), JSON.stringify(manifest, null, 2));
+      for (const file of files) {
+        fs.copyFileSync(path.join(publicDir, file), path.join(docsDir, file));
+      }
+      // Remove obsolete CSVs from docs
+      const docsCsvs = fs.readdirSync(docsDir).filter((f) => f.toLowerCase().endsWith(".csv"));
+      for (const dfile of docsCsvs) {
+        if (!files.includes(dfile)) {
+          try {
+            fs.unlinkSync(path.join(docsDir, dfile));
+          } catch {}
+        }
+      }
+    }
   } catch (e) {
     console.warn("Could not write csv-manifest.json:", e);
   }
