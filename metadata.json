@@ -1,0 +1,8 @@
+{
+  "name": "Remix Losovátko - Výběr studentů",
+  "description": "Jednoduchá aplikace pro náhodné losování studentů ze seznamu třídy s možností správy seznamu.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

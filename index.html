@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Losovátko - Výběr studentů</title>
+    <meta name="description" content="Aplikace pro náhodné losování studentů ze seznamu tříd s možností importu z CSV/XLSX a vyškrtáváním." />
+    <meta property="og:title" content="Losovátko - Výběr studentů" />
+    <meta property="og:description" content="Aplikace pro náhodné losování studentů ze seznamu tříd s možností importu z CSV/XLSX a vyškrtáváním." />
+    <script>
+      // Normalizace URL pro GitHub Pages se zpětným lomítkem na konci pro spolehlivé načtení relativních skriptů
+      (function() {
+        var p = window.location.pathname;
+        if (!p.endsWith('/') && !p.slice(p.lastIndexOf('/')).includes('.')) {
+          window.location.replace(p + '/' + window.location.search + window.location.hash);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
