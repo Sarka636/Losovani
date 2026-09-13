@@ -355,10 +355,10 @@ export default function ClassSelector({
                             onReloadFromGitHub();
                           }}
                           className="flex-1 py-1.5 px-2 text-zinc-600 hover:text-emerald-800 hover:bg-zinc-100 rounded-lg flex items-center justify-center gap-1.5 font-medium transition-colors cursor-pointer"
-                          title="Znovu načte tridy.xlsx z repozitáře"
+                          title="Znovu načte třídy ze souborů CSV v adresáři public (nebo z tridy.xlsx)"
                         >
                           <RefreshCw className="w-3.5 h-3.5 text-zinc-500" />
-                          <span>Načíst z tridy.xlsx</span>
+                          <span>Načíst z public CSV</span>
                         </button>
                       )}
                     </div>

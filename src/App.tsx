@@ -260,7 +260,7 @@ export default function App() {
     try {
       const result = await reloadFromGitHubXlsx();
       await loadClasses();
-      showToast(`Načteno ${result.count} tříd ze souboru tridy.xlsx`);
+      showToast(`Načteno ${result.count} tříd (${result.classNames.join(', ')})`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Nepodařilo se načíst soubor z GitHubu';
       showToast(msg);

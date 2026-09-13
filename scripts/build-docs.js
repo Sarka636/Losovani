@@ -28,6 +28,31 @@ if (fs.existsSync(indexPath)) {
 // Create .nojekyll so GitHub Pages doesn't ignore files or mangle asset URLs
 fs.writeFileSync(path.join(docsDir, '.nojekyll'), '');
 
+// Generate csv-manifest.json from public directory
+const publicDir = path.resolve('public');
+const csvFiles = fs.existsSync(publicDir)
+  ? fs.readdirSync(publicDir).filter((file) => file.toLowerCase().endsWith('.csv'))
+  : [];
+
+const manifestData = csvFiles.map((file) => ({
+  filename: file,
+  className: path.basename(file, path.extname(file)),
+}));
+
+fs.writeFileSync(
+  path.join(publicDir, 'csv-manifest.json'),
+  JSON.stringify(manifestData, null, 2)
+);
+fs.writeFileSync(
+  path.join(docsDir, 'csv-manifest.json'),
+  JSON.stringify(manifestData, null, 2)
+);
+
+// Copy all CSV files from public to docs
+for (const file of csvFiles) {
+  fs.copyFileSync(path.join(publicDir, file), path.join(docsDir, file));
+}
+
 // Verify public/tridy.xlsx is in docs/
 const publicXlsx = path.resolve('public/tridy.xlsx');
 const docsXlsx = path.join(docsDir, 'tridy.xlsx');
@@ -35,4 +60,4 @@ if (fs.existsSync(publicXlsx) && !fs.existsSync(docsXlsx)) {
   fs.copyFileSync(publicXlsx, docsXlsx);
 }
 
-console.log('✅ Successfully populated /docs for GitHub Pages (Deploy from a branch -> /docs)');
+console.log(`✅ Successfully populated /docs with ${csvFiles.length} CSV classes for GitHub Pages`);

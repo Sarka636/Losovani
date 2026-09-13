@@ -262,3 +262,148 @@ export async function fetchDefaultClassesFromRepo(): Promise<SheetClassResult[] 
 
   return null;
 }
+
+/**
+ * Parses raw CSV content (string or ArrayBuffer) and returns an array of student names
+ */
+export function parseCsvContentToStudentNames(csvContent: string | ArrayBuffer): string[] {
+  try {
+    let workbook: XLSX.WorkBook;
+    if (typeof csvContent === 'string') {
+      workbook = XLSX.read(csvContent, { type: 'string' });
+    } else {
+      workbook = XLSX.read(csvContent, { type: 'array' });
+    }
+    if (!workbook.SheetNames || workbook.SheetNames.length === 0) return [];
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    return parseWorksheetToNames(sheet);
+  } catch (err) {
+    console.warn('Error parsing CSV content with XLSX:', err);
+    if (typeof csvContent === 'string') {
+      const lines = csvContent.split(/\r?\n/);
+      const names: string[] = [];
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || isLikelyHeader(trimmed)) continue;
+        const cleaned = cleanStudentName(trimmed);
+        if (cleaned.length >= 2 && !isLikelyHeader(cleaned)) {
+          names.push(cleaned);
+        }
+      }
+      return Array.from(new Set(names));
+    }
+    return [];
+  }
+}
+
+/**
+ * Searches and fetches all CSV files located in public/.
+ * Uses csv-manifest.json or probes candidate filenames.
+ * The class name is the file name without .csv.
+ */
+export async function fetchPublicCsvClasses(): Promise<SheetClassResult[]> {
+  const base = import.meta.env.BASE_URL || './';
+  const cleanBase = base.endsWith('/') ? base : base + '/';
+
+  const results: SheetClassResult[] = [];
+  const processedFiles = new Set<string>();
+
+  // 1. Try to fetch csv-manifest.json
+  const manifestPaths = [
+    `${cleanBase}csv-manifest.json`,
+    './csv-manifest.json',
+    'csv-manifest.json',
+    '/csv-manifest.json',
+    `${cleanBase}public/csv-manifest.json`,
+    './public/csv-manifest.json',
+  ];
+
+  let filenamesToFetch: string[] = [];
+
+  for (const mp of manifestPaths) {
+    try {
+      const res = await fetch(mp, { method: 'GET', cache: 'no-cache' });
+      if (res.ok) {
+        const ct = res.headers.get('content-type');
+        if (ct && ct.includes('text/html')) continue;
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          for (const item of data) {
+            const fname = typeof item === 'string' ? item : item?.filename;
+            if (fname && typeof fname === 'string') {
+              filenamesToFetch.push(fname);
+            }
+          }
+          if (filenamesToFetch.length > 0) break;
+        }
+      }
+    } catch {
+      // Continue searching
+    }
+  }
+
+  // 2. Fallback candidate standard filenames
+  if (filenamesToFetch.length === 0) {
+    filenamesToFetch = [
+      '1.A.csv',
+      '2.B.csv',
+      'Kvarta.csv',
+      '1A.csv',
+      '1B.csv',
+      '2A.csv',
+      '2B.csv',
+      '3A.csv',
+      '3B.csv',
+      '4A.csv',
+      'Prima.csv',
+      'Sekunda.csv',
+      'Tercie.csv',
+      'trida.csv',
+    ];
+  }
+
+  // 3. Fetch and parse each CSV
+  for (const filename of filenamesToFetch) {
+    const cleanFilename = filename.trim();
+    if (processedFiles.has(cleanFilename.toLowerCase())) continue;
+
+    const className = cleanFilename.replace(/\.csv$/i, '').trim();
+    if (!className) continue;
+
+    const possiblePaths = [
+      `${cleanBase}${cleanFilename}`,
+      `./${cleanFilename}`,
+      cleanFilename,
+      `/${cleanFilename}`,
+      `${cleanBase}public/${cleanFilename}`,
+      `./public/${cleanFilename}`,
+    ];
+
+    for (const p of possiblePaths) {
+      try {
+        const res = await fetch(p, { method: 'GET', cache: 'no-cache' });
+        if (res.ok) {
+          const ct = res.headers.get('content-type');
+          if (ct && ct.includes('text/html')) continue;
+
+          const text = await res.text();
+          if (text && text.trim().length > 0) {
+            const names = parseCsvContentToStudentNames(text);
+            if (names.length > 0) {
+              results.push({
+                className,
+                names,
+              });
+              processedFiles.add(cleanFilename.toLowerCase());
+              break;
+            }
+          }
+        }
+      } catch {
+        // Try next candidate path
+      }
+    }
+  }
+
+  return results;
+}
